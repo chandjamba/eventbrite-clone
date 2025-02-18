@@ -1,15 +1,4 @@
-<div align="center">
-  <br />
-    <a href="https://youtu.be/zgGhzuBZOQg" target="_blank">
-      <img src="https://github.com/adrianhajdin/event_platform/assets/151519281/548975af-f0ed-4103-8834-fe93cf91862e" alt="Project Banner">
-    </a>
-  <br />
 
-  <div>
-    <img src="https://img.shields.io/badge/-TypeScript-black?style=for-the-badge&logoColor=white&logo=typescript&color=3178C6" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/-Stripe-black?style=for-the-badge&logoColor=white&logo=stripe&color=008CDD" alt="stripe" />
-  </div>
-</div>
 
 ## 📋 <a name="table">Table of Contents</a>
 
@@ -29,7 +18,6 @@ Built on Next.js 14, the events application stands as a comprehensive, full-stac
 
 - Node.js
 - React
-- TypeScript
 - TailwindCSS
 - Stripe
 - Zod
@@ -78,7 +66,7 @@ Make sure you have the following installed on your machine:
 **Cloning the Repository**
 
 ```bash
-git clone https://github.com/your-username/your-project.git
+git clone https://github.com/chandjamba/eventbrite-clone.git
 cd your-project
 ```
 
@@ -417,19 +405,18 @@ body {
 </details>
 
 <details>
-<summary><code>tailwind.config.ts</code></summary>
+<summary><code>tailwind.config.js</code></summary>
 
-```typescript
-/** @type {import('tailwindcss').Config} */
+```javascript
 import { withUt } from 'uploadthing/tw';
 
 module.exports = withUt({
   darkMode: ['class'],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    './pages/**/*.{js,jsx}',
+    './components/**/*.{js,jsx}',
+    './app/**/*.{js,jsx}',
+    './src/**/*.{js,jsx}',
   ],
   theme: {
     container: {
@@ -525,7 +512,7 @@ module.exports = withUt({
 <details>
 <summary><code>Clerk webhook</code></summary>
 
-```typescript
+```javascript
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
@@ -533,7 +520,7 @@ import { createUser, deleteUser, updateUser } from '@/lib/actions/user.actions'
 import { clerkClient } from '@clerk/nextjs'
 import { NextResponse } from 'next/server'
  
-export async function POST(req: Request) {
+export async function POST(req) {
  
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
   const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET
@@ -562,7 +549,7 @@ export async function POST(req: Request) {
   // Create a new Svix instance with your secret.
   const wh = new Webhook(WEBHOOK_SECRET);
  
-  let evt: WebhookEvent
+  let evt
  
   // Verify the payload with the headers
   try {
@@ -570,7 +557,7 @@ export async function POST(req: Request) {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
-    }) as WebhookEvent
+    }) 
   } catch (err) {
     console.error('Error verifying webhook:', err);
     return new Response('Error occured', {
@@ -636,22 +623,21 @@ export async function POST(req: Request) {
 </details>
 
 <details>
-<summary><code>user.actions.ts</code></summary>
+<summary><code>user.actions.js</code></summary>
 
-```typescript
+```javascript
 'use server'
 
 import { revalidatePath } from 'next/cache'
 
-import { connectToDatabase } from '@/lib/database'
-import User from '@/lib/database/models/user.model'
-import Order from '@/lib/database/models/order.model'
-import Event from '@/lib/database/models/event.model'
-import { handleError } from '@/lib/utils'
+import { connectToDatabase } from '../database/index.js'
+import Event from '../database/models/event.model.js'
+import Order from '../database/models/order.model.js'
+import User from '../database/models/user.model.js'
+import { handleError } from '../utils.js'
 
-import { CreateUserParams, UpdateUserParams } from '@/types'
 
-export async function createUser(user: CreateUserParams) {
+export async function createUser(user) {
   try {
     await connectToDatabase()
 
@@ -662,7 +648,7 @@ export async function createUser(user: CreateUserParams) {
   }
 }
 
-export async function getUserById(userId: string) {
+export async function getUserById(userId) {
   try {
     await connectToDatabase()
 
@@ -675,7 +661,7 @@ export async function getUserById(userId: string) {
   }
 }
 
-export async function updateUser(clerkId: string, user: UpdateUserParams) {
+export async function updateUser(clerkId, user) {
   try {
     await connectToDatabase()
 
@@ -688,7 +674,7 @@ export async function updateUser(clerkId: string, user: UpdateUserParams) {
   }
 }
 
-export async function deleteUser(clerkId: string) {
+export async function deleteUser(clerkId) {
   try {
     await connectToDatabase()
 
@@ -724,34 +710,11 @@ export async function deleteUser(clerkId: string) {
 </details>
 
 <details>
-<summary><code>order.model.ts</code></summary>
+<summary><code>order.model.js</code></summary>
   
-```typescript
-import { Schema, model, models, Document } from 'mongoose'
+```javascript
+import { Schema, model, models } from 'mongoose'
 
-export interface IOrder extends Document {
-  createdAt: Date
-  stripeId: string
-  totalAmount: string
-  event: {
-    _id: string
-    title: string
-  }
-  buyer: {
-    _id: string
-    firstName: string
-    lastName: string
-  }
-}
-
-export type IOrderItem = {
-  _id: string
-  totalAmount: string
-  createdAt: Date
-  eventTitle: string
-  eventId: string
-  buyer: string
-}
 
 const OrderSchema = new Schema({
   createdAt: {
@@ -784,27 +747,22 @@ export default Order
 </details>
 
 <details>
-<summary><code>FileUploader.tsx</code></summary>
+<summary><code>FileUploader.jsx</code></summary>
 
-```typescript
+```javascript
 'use client'
 
-import { useCallback, Dispatch, SetStateAction } from 'react'
-import type { FileWithPath } from '@uploadthing/react'
 import { useDropzone } from '@uploadthing/react/hooks'
+import { useCallback } from 'react'
 import { generateClientDropzoneAccept } from 'uploadthing/client'
 
-import { Button } from '@/components/ui/button'
-import { convertFileToUrl } from '@/lib/utils'
+import { Button } from '../ui/button.jsx'
+import { convertFileToUrl } from '../../lib/utils.js'
 
-type FileUploaderProps = {
-  onFieldChange: (url: string) => void
-  imageUrl: string
-  setFiles: Dispatch<SetStateAction<File[]>>
-}
 
-export function FileUploader({ imageUrl, onFieldChange, setFiles }: FileUploaderProps) {
-  const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
+
+export function FileUploader({ imageUrl, onFieldChange, setFiles }) {
+  const onDrop = useCallback((acceptedFiles) => {
     setFiles(acceptedFiles)
     onFieldChange(convertFileToUrl(acceptedFiles[0]))
   }, [])
@@ -848,9 +806,9 @@ export function FileUploader({ imageUrl, onFieldChange, setFiles }: FileUploader
 </details>
 
 <details>
-<summary><code>DeleteConfirmation.tsx</code></summary>
+<summary><code>DeleteConfirmation.jsx</code></summary>
 
-```typescript
+```javascript
 'use client'
 
 import { useTransition } from 'react'
@@ -867,11 +825,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from '../ui/alert-dialog.jsx'
 
-import { deleteEvent } from '@/lib/actions/event.actions'
 
-export const DeleteConfirmation = ({ eventId }: { eventId: string }) => {
+
+export const DeleteConfirmation = ({ eventId }) => {
   const pathname = usePathname()
   let [isPending, startTransition] = useTransition()
 
@@ -910,40 +868,32 @@ export const DeleteConfirmation = ({ eventId }: { eventId: string }) => {
 </details>
 
 <details>
-<summary><code>event.action.ts</code></summary>
+<summary><code>event.action.js</code></summary>
 
-```typescript
+```javascript
 'use server'
 
 import { revalidatePath } from 'next/cache'
 
-import { connectToDatabase } from '@/lib/database'
-import Event from '@/lib/database/models/event.model'
-import User from '@/lib/database/models/user.model'
-import Category from '@/lib/database/models/category.model'
-import { handleError } from '@/lib/utils'
+import { connectToDatabase } from '../database/index.js'
+import Category from '../database/models/category.model.js'
+import Event from '../database/models/event.model.js'
+import User from '../database/models/user.model.js'
+import { handleError } from '../utils.js'
 
-import {
-  CreateEventParams,
-  UpdateEventParams,
-  DeleteEventParams,
-  GetAllEventsParams,
-  GetEventsByUserParams,
-  GetRelatedEventsByCategoryParams,
-} from '@/types'
 
-const getCategoryByName = async (name: string) => {
+const getCategoryByName = async (name) => {
   return Category.findOne({ name: { $regex: name, $options: 'i' } })
 }
 
-const populateEvent = (query: any) => {
+const populateEvent = (query) => {
   return query
     .populate({ path: 'organizer', model: User, select: '_id firstName lastName' })
     .populate({ path: 'category', model: Category, select: '_id name' })
 }
 
 // CREATE
-export async function createEvent({ userId, event, path }: CreateEventParams) {
+export async function createEvent({ userId, event, path }) {
   try {
     await connectToDatabase()
 
@@ -960,7 +910,7 @@ export async function createEvent({ userId, event, path }: CreateEventParams) {
 }
 
 // GET ONE EVENT BY ID
-export async function getEventById(eventId: string) {
+export async function getEventById(eventId) {
   try {
     await connectToDatabase()
 
@@ -975,7 +925,7 @@ export async function getEventById(eventId: string) {
 }
 
 // UPDATE
-export async function updateEvent({ userId, event, path }: UpdateEventParams) {
+export async function updateEvent({ userId, event, path }) {
   try {
     await connectToDatabase()
 
@@ -998,7 +948,7 @@ export async function updateEvent({ userId, event, path }: UpdateEventParams) {
 }
 
 // DELETE
-export async function deleteEvent({ eventId, path }: DeleteEventParams) {
+export async function deleteEvent({ eventId, path }) {
   try {
     await connectToDatabase()
 
@@ -1010,7 +960,7 @@ export async function deleteEvent({ eventId, path }: DeleteEventParams) {
 }
 
 // GET ALL EVENTS
-export async function getAllEvents({ query, limit = 6, page, category }: GetAllEventsParams) {
+export async function getAllEvents({ query, limit = 6, page, category }) {
   try {
     await connectToDatabase()
 
@@ -1039,7 +989,7 @@ export async function getAllEvents({ query, limit = 6, page, category }: GetAllE
 }
 
 // GET EVENTS BY ORGANIZER
-export async function getEventsByUser({ userId, limit = 6, page }: GetEventsByUserParams) {
+export async function getEventsByUser({ userId, limit = 6, page }) {
   try {
     await connectToDatabase()
 
@@ -1066,7 +1016,7 @@ export async function getRelatedEventsByCategory({
   eventId,
   limit = 3,
   page = 1,
-}: GetRelatedEventsByCategoryParams) {
+}) {
   try {
     await connectToDatabase()
 
@@ -1091,23 +1041,22 @@ export async function getRelatedEventsByCategory({
 </details>
 
 <details>
-<summary><code>order.action.ts</code></summary>
+<summary><code>order.action.js</code></summary>
 
-```typescript
+```javascript
 "use server"
 
-import Stripe from 'stripe';
-import { CheckoutOrderParams, CreateOrderParams, GetOrdersByEventParams, GetOrdersByUserParams } from "@/types"
+import { ObjectId } from 'mongodb';
 import { redirect } from 'next/navigation';
-import { handleError } from '../utils';
-import { connectToDatabase } from '../database';
-import Order from '../database/models/order.model';
-import Event from '../database/models/event.model';
-import {ObjectId} from 'mongodb';
-import User from '../database/models/user.model';
+import Stripe from 'stripe';
+import { connectToDatabase } from '../database/index.js';
+import Event from '../database/models/event.model.js';
+import Order from '../database/models/order.model.js';
+import User from '../database/models/user.model.js';
+import { handleError } from '../utils.js';
 
-export const checkoutOrder = async (order: CheckoutOrderParams) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const checkoutOrder = async (order) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   const price = order.isFree ? 0 : Number(order.price) * 100;
 
@@ -1134,13 +1083,13 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
       cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/`,
     });
 
-    redirect(session.url!)
+    redirect(session.url)
   } catch (error) {
     throw error;
   }
 }
 
-export const createOrder = async (order: CreateOrderParams) => {
+export const createOrder = async (order) => {
   try {
     await connectToDatabase();
     
@@ -1157,7 +1106,7 @@ export const createOrder = async (order: CreateOrderParams) => {
 }
 
 // GET ORDERS BY EVENT
-export async function getOrdersByEvent({ searchString, eventId }: GetOrdersByEventParams) {
+export async function getOrdersByEvent({ searchString, eventId }) {
   try {
     await connectToDatabase()
 
@@ -1213,7 +1162,7 @@ export async function getOrdersByEvent({ searchString, eventId }: GetOrdersByEve
 }
 
 // GET ORDERS BY USER
-export async function getOrdersByUser({ userId, limit = 3, page }: GetOrdersByUserParams) {
+export async function getOrdersByUser({ userId, limit = 3, page }) {
   try {
     await connectToDatabase()
 
@@ -1247,18 +1196,16 @@ export async function getOrdersByUser({ userId, limit = 3, page }: GetOrdersByUs
 </details>
 
 <details>
-<summary><code>orders/page.tsx</code></summary>
+<summary><code>orders/page.jsx</code></summary>
 
-```typescript
-import Search  from '@/components/shared/Search'
-import { getOrdersByEvent } from '@/lib/actions/order.actions'
-import { formatDateTime, formatPrice } from '@/lib/utils'
-import { SearchParamProps } from '@/types'
-import { IOrderItem } from '@/lib/database/models/order.model'
+```javascript
+import Search  from '../../../components/shared/Search.jsx'
+import { getOrdersByEvent } from '../../../lib/actions/order.actions.js'
+import { formatDateTime, formatPrice } from '../../../lib/utils.js'
 
-const Orders = async ({ searchParams }: SearchParamProps) => {
-  const eventId = (searchParams?.eventId as string) || ''
-  const searchText = (searchParams?.query as string) || ''
+const Orders = async ({ searchParams }) => {
+  const eventId = (searchParams?.eventId ) || ''
+  const searchText = (searchParams?.query ) || ''
 
   const orders = await getOrdersByEvent({ eventId, searchString: searchText })
 
@@ -1293,7 +1240,7 @@ const Orders = async ({ searchParams }: SearchParamProps) => {
             ) : (
               <>
                 {orders &&
-                  orders.map((row: IOrderItem) => (
+                  orders.map((row) => (
                     <tr
                       key={row._id}
                       className="p-regular-14 lg:p-regular-16 border-b "
