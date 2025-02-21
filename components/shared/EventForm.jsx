@@ -35,7 +35,7 @@ const EventForm = ({ userId, type, event, eventId }) => {
 
   const { startUpload } = useUploadThing('imageUploader')
 
-  const form = useForm<z.infer<typeof eventFormSchema>>({
+  const form = useForm({
     resolver: zodResolver(eventFormSchema),
     defaultValues: initialValues
   })
